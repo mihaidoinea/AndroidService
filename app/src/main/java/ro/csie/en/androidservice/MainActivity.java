@@ -20,40 +20,36 @@ public class MainActivity extends AppCompatActivity {
     Button button;
 
     IService androidService;
-    ServiceConnection serviceConnection;
+    ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            androidService = IService.Stub.asInterface(iBinder);
+            Log.d(TAG,"Service was connected!");
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            androidService = null;
+            Log.d(TAG,"Service was disconnected!");
+        }
+    };
 
     @Override
     protected void onStart() {
         super.onStart();
-        serviceConnection = new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-                androidService = IService.Stub.asInterface(iBinder);
-                Log.d(TAG,"Service was connected!");
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName componentName) {
-                androidService = null;
-                Log.d(TAG,"Service was disconnected!");
-            }
-        };
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        unbindService(serviceConnection);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
+        Log.d(TAG, "onStart");
         if(androidService == null)
         {
             Intent intent = new Intent(MainActivity.this, RemoteService.class);
             bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d(TAG, "onSTop");
+        unbindService(serviceConnection);
     }
 
     @Override
@@ -67,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
         button = findViewById(R.id.button);
 
         button.setOnClickListener(view -> {
+
             String first = etFirst.getText().toString();
             String second = etSecond.getText().toString();
             String result = null;
